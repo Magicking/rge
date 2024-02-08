@@ -24,7 +24,7 @@ Contract address: [0x46d0d00e847ed9C2756cfD941E70D99e9152A22f](https://etherscan
    - RG Epitaph v2 (rc2)
    - [ ] NFT Market places integration
    - RG DAO
-     - ENS [rgepitaph.eth](https://app.ens.domains/rgepitaph.eth) subscribe for 50 years (Jan 14, 2075)
+     - ENS [rgepitaph.eth](https://app.ens.domains/rgepitaph.eth) subscribed for 50 years (Jan 14, 2075)
      - [ ] Define the transition from multi-sig to a voting system for RG holders
    - Start making/collecting soul & emotions
 
