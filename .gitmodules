@@ -9,4 +9,4 @@
 	url = https://github.com/lib/forge-std
 [submodule "lib/v2-periphery"]
 	path = lib/v2-periphery
-	url = https://github.com/Uniswap/v2-periphery
+	url = https://github.com/lib/v2-periphery
