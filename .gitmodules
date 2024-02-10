@@ -12,4 +12,4 @@
 	url = https://github.com/lib/v2-periphery
 [submodule "lib/solady"]
 	path = lib/solady
-	url = https://github.com/Vectorized/solady
+	url = https://github.com/lib/solady
