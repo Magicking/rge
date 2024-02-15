@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import "forge-std/Script.sol";
 
 import "@openzeppelin/contracts/utils/Strings.sol";
-import {Pricing} from "../src/Pricing.sol";
+import {Pricing} from "../src/previous_contracts/Pricing.sol";
 
 struct Coupon {
     bytes32[] proof;

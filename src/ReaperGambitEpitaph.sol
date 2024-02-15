@@ -11,7 +11,7 @@ import {NotAuthorized, PricingKO, ColorAlreadyUsed, PriceTooLow, OnlyLivingsGetE
 import {IReaperGambitEpitaph} from "./interfaces/IReaperGambitEpitaph.sol";
 
 import {BMPImage} from "../src/BMPEncoder.sol";
-import {IPricing} from "../src/Pricing.sol";
+import {IPricing} from "../src/interfaces/IPricing.sol";
 
 interface IERC20ReaperGambit is IERC20 {
     // Return block death number or 0 if immortal or unknown

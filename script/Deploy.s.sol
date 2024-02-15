@@ -4,7 +4,8 @@ pragma solidity >=0.8.19;
 import "forge-std/Script.sol";
 import { BMPImage } from "../src/BMPEncoder.sol";
 import { ReaperGambitEpitaph } from "../src/ReaperGambitEpitaph.sol";
-import { IPricing, Pricing } from "../src/Pricing.sol";
+import { Pricing } from "../src/previous_contracts/Pricing.sol";
+import { IPricing } from "../src/interfaces/IPricing.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 // Import IERC20.sol from OpenZeppelin contracts repo
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -50,7 +51,7 @@ contract Deploy is Script {
 		// root with 10_000 reduction coupon and 2K BB board
 		bytes32 root = 0x8868584bcca5b092e0c5f5819664ae2ff1d779b6bf6f9575d7478a082d39c262;
 
-		Pricing pricer = new Pricing(root);
+		IPricing pricer = IPricing(address(new Pricing(root)));
 		BMPImage renderer = new BMPImage();
         ReaperGambitEpitaph rge = new ReaperGambitEpitaph();
 		// Deploy && Initialize proxy
