@@ -92,7 +92,6 @@ contract UpdatePricerV0 is Script {
     using console2 for bytes;
 
     function run() public {
-        vm.startBroadcast(0x9c7b5796bf5f4a3a6ca25e87312ba0ea5b0f0a06b209ab12017ab45ccefa85b3);
         ReaperGambitEpitaph rge = ReaperGambitEpitaph(address(RGE_ADDRESS));
         (IPricing pricer, BMPImage renderer) = rge.getStorage();
         console.log("Old values");
@@ -103,9 +102,8 @@ contract UpdatePricerV0 is Script {
         console.log("Changing DAO value");
         address DAO = 0x89261878977B5a01C4fD78Fc11566aBe31BBc14e;
         // Deploy PricingV0 implementation and deploy proxy
-        IPricing pricerV0 = IPricing(address(new ERC1967Proxy(address(new PricingV0()), abi.encodeCall(PricingV0.initialize, (address(RGE_ADDRESS))))));
-        vm.stopBroadcast();
         vm.startBroadcast();
+        IPricing pricerV0 = IPricing(address(new ERC1967Proxy(address(new PricingV0()), abi.encodeCall(PricingV0.initialize, (address(RGE_ADDRESS))))));
         rge.setDependencies(address(RG), address(pricerV0), address(renderer));
         vm.stopBroadcast();
         (pricer, renderer) = rge.getStorage();
