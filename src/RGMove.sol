@@ -2,19 +2,14 @@ pragma solidity 0.8.21;
 
 import {IWETH} from "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-/// @dev Use of the non-standard `increaseAllowance` function
-interface OZIERC20 is IERC20 {
-    function increaseAllowance(address spender, uint256 amount) external returns (bool);
-}
+import "./constants.sol";
 
 /// @title RGMove - A contract to move RG from the NFT contract to the DAO
 /// @author Magicking
 /// @notice This contract is used to manipulate RG tokens and move them to the DAO
 contract RGMove {
-	IUniswapV2Router02 immutable uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-	OZIERC20 immutable RG = OZIERC20(0x2C91D908E9fab2dD2441532a04182d791e590f2d);
     
     /// @notice Function to calculate 90% of a value, used to calculate the slippage
     /// @param value The value to calculate 90% of
@@ -41,7 +36,7 @@ contract RGMove {
         uint256 amount = msg.value >> 1;
         // half of the ETH amount is now RG, increasing RG price
         uint256[] memory maxOuts = uniswapRouter.getAmountsOut(amount, path);
-        uniswapRouter.swapExactETHForTokens{value: amount}(maxOuts[1], path, address(this), block.timestamp + 60);
+        uniswapRouter.swapExactETHForTokens{value: amount}(2, path, address(this), block.timestamp + 60);
         IWETH(address(WETH)).deposit{value: msg.value - amount}();
         WETH.approve(address(uniswapRouter), type(uint256).max);
         uint256 RGAmount = RG.balanceOf(address(this));

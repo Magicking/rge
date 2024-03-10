@@ -5,13 +5,13 @@ import "forge-std/Script.sol";
 import { BMPImage } from "../src/BMPEncoder.sol";
 import { ReaperGambitEpitaph } from "../src/ReaperGambitEpitaph.sol";
 import { Pricing } from "../src/previous_contracts/Pricing.sol";
+import { PricingV0 } from "../src/Pricing.sol";
 import { IPricing } from "../src/interfaces/IPricing.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 // Import IERC20.sol from OpenZeppelin contracts repo
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import { IUniswapV2Router02 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import { IWETH } from "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
+import "../src/constants.sol";
 
 interface IERC20ReaperGambit is IERC20 {
     // Return block death number or 0 if immortal or unknown
@@ -24,8 +24,6 @@ contract Deploy is Script {
 
 
 	function printDAOStats(ReaperGambitEpitaph rge) public {
-		IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-		IERC20 RG = IERC20(0x2C91D908E9fab2dD2441532a04182d791e590f2d);
 		IERC20 LPTOKEN = IERC20(0x8aB0fF3106Bf37b2dB685aafD458BAee2128D648);
 		IERC20 WETH = IERC20(uniswapRouter.WETH());
 		address dao = rge.owner();
@@ -86,6 +84,36 @@ contract UpdateRGE is Script {
        (pricer, renderer) = rge.getStorage();
        console.log("DAO values", rge.owner());
        vm.stopBroadcast();
+    }
+}
+/// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
+contract UpdatePricerV0 is Script {
+    using console2 for string;
+    using console2 for bytes;
+
+    function run() public {
+        vm.startBroadcast(0x9c7b5796bf5f4a3a6ca25e87312ba0ea5b0f0a06b209ab12017ab45ccefa85b3);
+        ReaperGambitEpitaph rge = ReaperGambitEpitaph(address(RGE_ADDRESS));
+        (IPricing pricer, BMPImage renderer) = rge.getStorage();
+        console.log("Old values");
+        console.log("==================================");
+        console.log("Renderer values", address(renderer));
+        console.log("Pricer values", address(pricer));
+        console.log("DAO values", rge.owner());
+        console.log("Changing DAO value");
+        address DAO = 0x89261878977B5a01C4fD78Fc11566aBe31BBc14e;
+        // Deploy PricingV0 implementation and deploy proxy
+        IPricing pricerV0 = IPricing(address(new ERC1967Proxy(address(new PricingV0()), abi.encodeCall(PricingV0.initialize, (address(RGE_ADDRESS))))));
+        vm.stopBroadcast();
+        vm.startBroadcast();
+        rge.setDependencies(address(RG), address(pricerV0), address(renderer));
+        vm.stopBroadcast();
+        (pricer, renderer) = rge.getStorage();
+        console.log("New values");
+        console.log("==================================");
+        console.log("Renderer values", address(renderer));
+        console.log("Pricer values", address(pricer));
+        console.log("DAO values", rge.owner());
     }
 }
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting

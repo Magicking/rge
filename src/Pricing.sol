@@ -1,13 +1,14 @@
 pragma solidity 0.8.21;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {IERC5313} from "@openzeppelin/contracts/interfaces/IERC5313.sol";
 
 import {RGMove} from "./RGMove.sol";
 import {IPricing} from "./interfaces/IPricing.sol";
+
 import "./errors.sol";
+import "./constants.sol";
 
 /// @title Pricing - A contract to price the NFTs
 /// @author Magicking
@@ -42,7 +43,7 @@ contract PricingV0 is UUPSUpgradeable, IPricing {
 		$.rge = IERC5313(rge);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override {
+    function _authorizeUpgrade(address) internal view override {
 		if (msg.sender != _getStorageV0().rge.owner()) {
 			revert NotAuthorized();
 		}
@@ -56,33 +57,15 @@ contract PricingV0 is UUPSUpgradeable, IPricing {
         new RGMove{value: msg.value}(from, inMemoryOf, dao);
     }
 
-    function getPrice(uint256 color) public returns (uint256, uint256) {
+    function getPrice(uint256 color) public view returns (uint256, uint256) {
         return getPrice(color, "");
     }
 
-	/// @dev kept for historical reasons
-    struct Coupon {
-        bytes32[] proof;
-        // First 1 bits is type
-        // 0: Percentage
-        // 1: address max reduction
-        uint256 reduction;
-    }
+    function getPrice(uint256 color, bytes memory) public view returns (uint256, uint256) {
+        address[] memory path = new address[](2);
+        path[0] = address(uniswapRouter.WETH());
+        path[1] = address(RG);
 
-	/// @dev kept for historical reasons, coupon has been removed
-    function isValidCoupon(bytes memory) public view returns (bool, bytes32 leaf, Coupon memory coupon) {
-        // Verify proof
-        return (
-            false,
-            0x0,
-            Coupon({
-				proof: new bytes32[](0),
-				reduction: 0
-			})
-        );
-    }
-
-    function getPrice(uint256 color, bytes memory) public returns (uint256, uint256) {
         uint256 r = (color & 0xFF0000) >> 16;
         uint256 g = (color & 0x00FF00) >> 8;
         uint256 b = (color & 0x0000FF);
@@ -111,6 +94,9 @@ contract PricingV0 is UUPSUpgradeable, IPricing {
         // Above the 50% brightPrice, there is more color
         uint256 price = (value + sat < 1 ether) ? value : value + sat;
         // See https://www.peko-step.com/en/tool/colorchart_en.html for vizualisation
+
+        uint256[] memory maxOuts = uniswapRouter.getAmountsIn(AMOUNT_TO_BUY, path);
+        price = maxOuts[0] * price / 2 ether;
         return (price, 0);
     }
 }
