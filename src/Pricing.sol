@@ -1,136 +1,71 @@
 pragma solidity 0.8.21;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import {IERC5313} from "@openzeppelin/contracts/interfaces/IERC5313.sol";
 
-import {IWETH} from "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {RGMove} from "./RGMove.sol";
+import {IPricing} from "./interfaces/IPricing.sol";
 
-interface OZIERC20 is IERC20 {
-    function increaseAllowance(address spender, uint256 amount) external returns (bool);
-}
+import "./errors.sol";
+import "./constants.sol";
 
-// A new contract with a new address is used to avoid the NFT contract to manipulate RG
-contract UseOnce {
-    // 10% slippage for bot honeypotting
-    function f90pc(uint256 value) internal pure returns (uint256) {
-        return (value * 90) / 100;
+/// @title Pricing - A contract to price the NFTs
+/// @author Magicking
+/// @notice This contract is used to price the mint of the RGE NFT
+contract PricingV0 is UUPSUpgradeable, IPricing {
+    bytes32 private constant STORAGE_V0_LOCATION = 0x9d87395271d3df9de7534803da3336e5683fec18ecaee2e38d1318d0ae243200; //keccak256(abi.encode(uint256(keccak256("rge.v0")) - 1)) & ~bytes32(uint256(0xff))
+    // bytes32 private constant STORAGE_V0_LOCATION = keccak256(abi.encode(uint256(keccak256("rge.v0")) - 1)) & ~bytes32(uint256(0xff));
+
+    /// @custom:storage-location erc7201:rge.v0
+    struct StorageV0 {
+		string baseURI;
+		IERC5313 rge;
     }
 
-    constructor(address from, address inMemoryOf, address _dao) payable {
-        IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-        OZIERC20 RG = OZIERC20(0x2C91D908E9fab2dD2441532a04182d791e590f2d);
-        IERC20 WETH = IERC20(uniswapRouter.WETH());
-
-        // Initialize address[] memory path  with Weth and RG pair
-        address[] memory path = new address[](2);
-        path[0] = address(WETH);
-        path[1] = address(RG);
-
-        // Take half of the msg.value
-        uint256 amount = msg.value >> 1;
-        // half of the ETH amount is now RG, increasing RG price
-        uint256[] memory maxOuts = uniswapRouter.getAmountsOut(amount, path);
-        uniswapRouter.swapExactETHForTokens{value: amount}(maxOuts[1], path, address(this), block.timestamp + 60);
-        IWETH(address(WETH)).deposit{value: msg.value - amount}();
-        WETH.approve(address(uniswapRouter), type(uint256).max);
-        uint256 RGAmount = RG.balanceOf(address(this));
-        uint256 dust = 1 * 10 ** 18;
-        if (RGAmount <= 2 * 10 ** 18) {
-            dust = 1;
-        }
-        // Send 1 RG towards the sender to improve its health
-        RG.transfer(from, dust);
-        // Send 1 RG towards the account to remember account
-        RG.transfer(inMemoryOf, dust);
-        RGAmount = RG.balanceOf(address(this));
-        // add liquitidy to the pool
-        RG.increaseAllowance(address(uniswapRouter), RGAmount);
-        // send the LP RG to DAO
-        uniswapRouter.addLiquidity(
-            path[1],
-            path[0],
-            RGAmount,
-            msg.value - amount,
-            f90pc(RGAmount),
-            f90pc(msg.value - amount),
-            _dao,
-            block.timestamp + 60
-        );
-        // transfer RG remaining to SENDER
-        RGAmount = RG.balanceOf(address(this));
-        path[0] = address(RG);
-        path[1] = address(WETH);
-        // swap remaining RG to ETH and send to dao
-        // 10% slippage for bot honeypotting
-        if (RGAmount > 0) {
-            maxOuts = uniswapRouter.getAmountsOut(RGAmount, path);
-            uniswapRouter.swapExactTokensForTokens(RGAmount, f90pc(maxOuts[1]), path, _dao, block.timestamp + 60);
-            RGAmount = RG.balanceOf(address(this));
-        }
-        // transfer WETH remaining to DAO
-        amount = WETH.balanceOf(address(this));
-        if (amount > 0) {
-            WETH.transfer(_dao, amount);
-        }
-        // transfer RG remaining to SENDER
-        RGAmount = RG.balanceOf(address(this));
-        if (RGAmount > 0) {
-            RG.transfer(from, RGAmount);
+	/// @notice Internal function to get the storage pointer
+    function _getStorageV0() private pure returns (StorageV0 storage $) {
+        assembly {
+            $.slot := STORAGE_V0_LOCATION
         }
     }
-}
 
-interface IPricing {
-    function getPrice(uint256 color) external returns (uint256 price, uint256 errno);
-    function getPrice(uint256 color, bytes calldata proof) external returns (uint256 price, uint256 errno);
-    function payment(address from, address destination, address dao) external payable;
-    function baseURI() external view returns (string memory);
-}
-
-contract Pricing is IPricing {
-    string public baseURI = "https://rge.6120.eu/nft/";
-
-    constructor(bytes32 _couponRoot) {
-        couponRoot_ = _couponRoot;
+	/// @notice Internal function to disable the constructor
+    constructor() {
+        _disableInitializers();
     }
-    // Structure of a coupon with the bytes32 proof and the reduction percentage
 
-    struct Coupon {
-        bytes32[] proof;
-        // First 1 bits is type
-        // 0: Percentage
-        // 1: address max reduction
-        uint256 reduction;
+	/// @notice Initializer function to setup the upgreadable pricer
+    function initialize(address rge) public initializer {
+        __UUPSUpgradeable_init();
+        StorageV0 storage $ = _getStorageV0();
+		$.baseURI = "https://rge.6120.eu/epitaph?i=";
+		$.rge = IERC5313(rge);
     }
-    // Mapping of the used coupons
 
-    bytes32 public couponRoot_;
-    mapping(bytes32 => bool) public usedCoupons_;
+    function _authorizeUpgrade(address) internal view override {
+		if (msg.sender != _getStorageV0().rge.owner()) {
+			revert NotAuthorized();
+		}
+	}
+
+	function baseURI() public view override returns (string memory) {
+		return _getStorageV0().baseURI;
+	}
 
     function payment(address from, address inMemoryOf, address dao) external payable override {
-        new UseOnce{value: msg.value}(from, inMemoryOf, dao);
+        new RGMove{value: msg.value}(from, inMemoryOf, dao);
     }
 
-    function getPrice(uint256 color) public returns (uint256, uint256) {
-        bytes memory proof = "";
-        return getPrice(color, proof);
+    function getPrice(uint256 color) public view returns (uint256, uint256) {
+        return getPrice(color, "");
     }
 
-    function isValidCoupon(bytes memory proof) public view returns (bool, bytes32 leaf, Coupon memory coupon) {
-        // Unpack proof
-        coupon = abi.decode(proof, (Coupon));
-        leaf = keccak256(bytes.concat(keccak256(abi.encode(coupon.reduction))));
-        // Verify proof
-        return (
-            MerkleProof.verify(coupon.proof, couponRoot_, leaf),
-            keccak256(bytes.concat(keccak256(abi.encode(coupon)))),
-            coupon
-        );
-    }
+    function getPrice(uint256 color, bytes memory) public view returns (uint256, uint256) {
+        address[] memory path = new address[](2);
+        path[0] = address(uniswapRouter.WETH());
+        path[1] = address(RG);
 
-    function getPrice(uint256 color, bytes memory proof) public returns (uint256, uint256) {
         uint256 r = (color & 0xFF0000) >> 16;
         uint256 g = (color & 0x00FF00) >> 8;
         uint256 b = (color & 0x0000FF);
@@ -159,30 +94,9 @@ contract Pricing is IPricing {
         // Above the 50% brightPrice, there is more color
         uint256 price = (value + sat < 1 ether) ? value : value + sat;
         // See https://www.peko-step.com/en/tool/colorchart_en.html for vizualisation
-        if (proof.length > 0) {
-            // Check if coupon is valid
-            (bool isValid, bytes32 leaf, Coupon memory coupon) = isValidCoupon(proof);
-            if (!isValid) {
-                return (price, 2); // Invalid coupon
-            }
-            if (usedCoupons_[leaf]) {
-                return (price, 3); // Already used coupon
-            }
-            // Mark it as used using proof+leaf
-            usedCoupons_[leaf] = true;
 
-            // Apply discount
-            if (coupon.reduction >> 255 == 1) {
-                // Address reduction
-                address couponAddress = address(uint160((~(uint256(1) << 255)) & coupon.reduction));
-                require(tx.origin == couponAddress, "Not your coupon");
-                price = price / 100; // 1% reduction
-            } else {
-                // Percentage reduction
-                uint256 couponPercentage = coupon.reduction;
-                price = (couponPercentage * price) / 10000;
-            }
-        }
+        uint256[] memory maxOuts = uniswapRouter.getAmountsIn(AMOUNT_TO_BUY, path);
+        price = maxOuts[0] * price / 2 ether;
         return (price, 0);
     }
 }

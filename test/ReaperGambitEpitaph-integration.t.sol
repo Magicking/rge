@@ -9,7 +9,8 @@ import {ReaperGambitEpitaph} from "../src/ReaperGambitEpitaph.sol";
 // Import IERC20.sol from OpenZeppelin contracts repo
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import {Pricing} from "../src/Pricing.sol";
+import {Pricing} from "../src/previous_contracts/Pricing.sol";
+import {IPricing} from "../src/interfaces/IPricing.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -36,7 +37,7 @@ contract ReaperGambitTest is Test {
         vm.selectFork(mainnetFork);
         assertEq(vm.activeFork(), mainnetFork);
 
-        Pricing pricer = new Pricing(bytes32(0x0));
+        IPricing pricer = IPricing(address(new Pricing(bytes32(0x0))));
         alice = address(0xdeada1ce);
         vm.deal(alice, 3 ether);
         rg = IERC20ReaperGambit(0x2C91D908E9fab2dD2441532a04182d791e590f2d);

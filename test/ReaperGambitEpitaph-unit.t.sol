@@ -9,7 +9,8 @@ import {ReaperGambitEpitaph, BokkyPooBahsDateTimeContract} from "../src/ReaperGa
 // Import IERC20.sol from OpenZeppelin contracts repo
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import {IPricing, Pricing} from "../src/Pricing.sol";
+import {Pricing} from "../src/previous_contracts/Pricing.sol";
+import {IPricing} from "../src/interfaces/IPricing.sol";
 import {BMPImage} from "../src/BMPEncoder.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -33,13 +34,13 @@ contract ReaperGambitTest is Test {
     ERC1967Proxy proxy;
     ReaperGambitEpitaph _implementation;
     ReaperGambitEpitaph rge;
-    Pricing pricer;
+    IPricing pricer;
     IUniswapV2Router02 uniswapRouter;
     address alice;
 
     function setUp() public {
         BMPImage renderer = new BMPImage();
-        pricer = new Pricing(bytes32(0x0));
+        pricer = IPricing(address(new Pricing(bytes32(0x0))));
         vm.deal(alice, 6 ether);
         rg = IERC20ReaperGambit(0x2C91D908E9fab2dD2441532a04182d791e590f2d);
         _implementation = new ReaperGambitEpitaph();
