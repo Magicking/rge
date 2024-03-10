@@ -5,12 +5,11 @@ import "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 import "forge-std/Script.sol";
 
-import { PricingV0 } from "../src/Pricing.sol";
-import { IPricing } from "../src/interfaces/IPricing.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {PricingV0} from "../src/Pricing.sol";
+import {IPricing} from "../src/interfaces/IPricing.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import "../src/constants.sol";
-
 
 contract PricingTest is Test {
     IPricing pricer;
@@ -22,8 +21,10 @@ contract PricingTest is Test {
         uint256 mainnetFork = vm.createFork(MAINNET_RPC_URL);
         vm.selectFork(mainnetFork);
         assertEq(vm.activeFork(), mainnetFork);
-        
-        pricer = IPricing(address(new ERC1967Proxy(address(new PricingV0()), abi.encodeCall(PricingV0.initialize, (RGE_ADDRESS)))));
+
+        pricer = IPricing(
+            address(new ERC1967Proxy(address(new PricingV0()), abi.encodeCall(PricingV0.initialize, (RGE_ADDRESS))))
+        );
     }
 
     function testGetPrice() public {

@@ -27,7 +27,6 @@ interface BokkyPooBahsDateTimeContract {
 }
 
 contract ReaperGambitEpitaph is ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable, IReaperGambitEpitaph {
-
     bytes32 private constant STORAGE_V0_LOCATION = 0x9d87395271d3df9de7534803da3336e5683fec18ecaee2e38d1318d0ae243200; //keccak256(abi.encode(uint256(keccak256("rge.v0")) - 1)) & ~bytes32(uint256(0xff))
     // bytes32 private constant STORAGE_V0_LOCATION = keccak256(abi.encode(uint256(keccak256("rge.v0")) - 1)) & ~bytes32(uint256(0xff));
 

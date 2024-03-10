@@ -45,8 +45,9 @@ contract ReaperGambitTest is Test {
         rg = IERC20ReaperGambit(0x2C91D908E9fab2dD2441532a04182d791e590f2d);
         _implementation = new ReaperGambitEpitaph();
         // Deploy && Initialize proxy
-        proxy =
-        new ERC1967Proxy(address(_implementation), abi.encodeCall(ReaperGambitEpitaph.initialize, (renderer, pricer)));
+        proxy = new ERC1967Proxy(
+            address(_implementation), abi.encodeCall(ReaperGambitEpitaph.initialize, (renderer, pricer))
+        );
         rge = ReaperGambitEpitaph(address(proxy));
 
         uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);

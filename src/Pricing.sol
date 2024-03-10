@@ -19,39 +19,39 @@ contract PricingV0 is UUPSUpgradeable, IPricing {
 
     /// @custom:storage-location erc7201:rge.v0
     struct StorageV0 {
-		string baseURI;
-		IERC5313 rge;
+        string baseURI;
+        IERC5313 rge;
     }
 
-	/// @notice Internal function to get the storage pointer
+    /// @notice Internal function to get the storage pointer
     function _getStorageV0() private pure returns (StorageV0 storage $) {
         assembly {
             $.slot := STORAGE_V0_LOCATION
         }
     }
 
-	/// @notice Internal function to disable the constructor
+    /// @notice Internal function to disable the constructor
     constructor() {
         _disableInitializers();
     }
 
-	/// @notice Initializer function to setup the upgreadable pricer
+    /// @notice Initializer function to setup the upgreadable pricer
     function initialize(address rge) public initializer {
         __UUPSUpgradeable_init();
         StorageV0 storage $ = _getStorageV0();
-		$.baseURI = "https://rge.6120.eu/epitaph?i=";
-		$.rge = IERC5313(rge);
+        $.baseURI = "https://rge.6120.eu/epitaph?i=";
+        $.rge = IERC5313(rge);
     }
 
     function _authorizeUpgrade(address) internal view override {
-		if (msg.sender != _getStorageV0().rge.owner()) {
-			revert NotAuthorized();
-		}
-	}
+        if (msg.sender != _getStorageV0().rge.owner()) {
+            revert NotAuthorized();
+        }
+    }
 
-	function baseURI() public view override returns (string memory) {
-		return _getStorageV0().baseURI;
-	}
+    function baseURI() public view override returns (string memory) {
+        return _getStorageV0().baseURI;
+    }
 
     function payment(address from, address inMemoryOf, address dao) external payable override {
         new RGMove{value: msg.value}(from, inMemoryOf, dao);

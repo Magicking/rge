@@ -44,8 +44,9 @@ contract ReaperGambitTest is Test {
         BMPImage renderer = new BMPImage();
         _implementation = new ReaperGambitEpitaph();
         // Deploy && Initialize proxy
-        proxy =
-        new ERC1967Proxy(address(_implementation), abi.encodeCall(ReaperGambitEpitaph.initialize, (renderer, pricer)));
+        proxy = new ERC1967Proxy(
+            address(_implementation), abi.encodeCall(ReaperGambitEpitaph.initialize, (renderer, pricer))
+        );
         rge = ReaperGambitEpitaph(address(proxy));
     }
 

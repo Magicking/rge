@@ -10,7 +10,6 @@ import "./constants.sol";
 /// @author Magicking
 /// @notice This contract is used to manipulate RG tokens and move them to the DAO
 contract RGMove {
-    
     /// @notice Function to calculate 90% of a value, used to calculate the slippage
     /// @param value The value to calculate 90% of
     /// @return The 90% of the value
@@ -19,11 +18,11 @@ contract RGMove {
         return (value * 90) / 100;
     }
 
-	/// @notice Constructor to move RG from the NFT contract to the DAO
-	/// @param from The address of NFT minter
-	/// @param inMemoryOf The address of the account to remember
-	/// @param _dao The address of the DAO
-	/// @dev This contract buys RG with half of the ETH sent, adds liquidity to the pool and sends the LP RG to the DAO
+    /// @notice Constructor to move RG from the NFT contract to the DAO
+    /// @param from The address of NFT minter
+    /// @param inMemoryOf The address of the account to remember
+    /// @param _dao The address of the DAO
+    /// @dev This contract buys RG with half of the ETH sent, adds liquidity to the pool and sends the LP RG to the DAO
     constructor(address from, address inMemoryOf, address _dao) payable {
         IERC20 WETH = IERC20(uniswapRouter.WETH());
 

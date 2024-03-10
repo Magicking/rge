@@ -6,4 +6,3 @@ interface IPricing {
     function payment(address from, address destination, address dao) external payable;
     function baseURI() external view returns (string memory);
 }
-

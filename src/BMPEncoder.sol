@@ -304,7 +304,7 @@ contract BMPImage {
     }
 
     function palette256() public pure returns (bytes memory) {
-        bytes memory palette = new bytes(3*256);
+        bytes memory palette = new bytes(3 * 256);
         uint256 index = 0;
         for (uint8 r = 0; r < 8; r++) {
             for (uint8 g = 0; g < 8; g++) {
