@@ -8,6 +8,8 @@ import {Pricing} from "../src/previous_contracts/Pricing.sol";
 import {PricingV0} from "../src/Pricing.sol";
 import {IPricing} from "../src/interfaces/IPricing.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 // Import IERC20.sol from OpenZeppelin contracts repo
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
@@ -68,7 +70,7 @@ contract Deploy is Script {
 }
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 
-contract UpdateRGE is Script {
+contract SetOwnership is Script {
     using console2 for string;
     using console2 for bytes;
 
@@ -89,8 +91,26 @@ contract UpdateRGE is Script {
         vm.stopBroadcast();
     }
 }
-/// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 
+contract UpdateRGEV0 is Script {
+    using console2 for string;
+    using console2 for bytes;
+
+    address public deployedContract = address(RGE_ADDRESS);
+
+    function run() public {
+        UUPSUpgradeable rge = UUPSUpgradeable(deployedContract);
+        //console.log("DAO value", rge.owner());
+        //address DAO = 0x89261878977B5a01C4fD78Fc11566aBe31BBc14e;
+        // Deploy 
+        vm.startBroadcast();
+        ReaperGambitEpitaph rgeV0 = new ReaperGambitEpitaph();
+        rge.upgradeToAndCall(address(rgeV0), new bytes(0));
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract UpdatePricerV0 is Script {
     using console2 for string;
     using console2 for bytes;
@@ -122,8 +142,19 @@ contract UpdatePricerV0 is Script {
         console.log("DAO values", rge.owner());
     }
 }
-/// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 
+contract DeployRGEV0 is Script {
+    using console2 for string;
+    using console2 for bytes;
+
+    function run() public {
+        vm.startBroadcast();
+        ReaperGambitEpitaph rgeV0 = new ReaperGambitEpitaph();
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract DeployPricer is Script {
     using console2 for string;
     using console2 for bytes;

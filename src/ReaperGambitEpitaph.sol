@@ -75,6 +75,7 @@ contract ReaperGambitEpitaph is ERC721Upgradeable, OwnableUpgradeable, UUPSUpgra
     }
 
     uint256 immutable flagTagPosition = 255;
+    uint256 immutable flagTransferPosition = 0;
 
     function initialize(BMPImage _renderer, IPricing _pricer) public initializer {
         __Ownable_init_unchained(msg.sender);
@@ -120,9 +121,14 @@ contract ReaperGambitEpitaph is ERC721Upgradeable, OwnableUpgradeable, UUPSUpgra
         return ret;
     }
 
-    function mintEpitaphOf(uint256[12] calldata sig, uint256 color, address to, bytes memory coupon) public payable {
-        _doMint(to, color, coupon);
-        _updateEpitaphTo(to, _getStorageV0().totalSupply - 1, sig, color, to != msg.sender);
+    function mintEpitaphOf(uint256[12] calldata sig, uint256 color, address to, bytes memory options) public payable {
+        _doMint(to, color, options);
+        uint256 idx = _getStorageV0().totalSupply - 1;
+        _updateEpitaphTo(to, idx, sig, color, to != msg.sender);
+        // If the bit flag is set, transfer NFT to InMemoryOf in options
+        if (options.length > 0 && (uint8(options[0]) & (0x1 << flagTransferPosition)) > 0) {
+            transferFrom(msg.sender, to, idx);
+        }
     }
 
     function calcPrice(uint256 color, bytes memory coupon) public returns (uint256) {

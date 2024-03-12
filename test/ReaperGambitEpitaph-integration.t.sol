@@ -15,6 +15,8 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+import "../src/constants.sol";
+
 interface IERC20ReaperGambit is IERC20 {
     // Return block death number or 0 if immortal or unknown
     function KnowDeath(address account) external view returns (uint256);
@@ -28,6 +30,7 @@ contract ReaperGambitTest is Test {
     IUniswapV2Router02 uniswapRouter;
 
     address alice;
+    address bob;
 
     uint256 mainnetFork;
 
@@ -39,6 +42,7 @@ contract ReaperGambitTest is Test {
 
         IPricing pricer = IPricing(address(new Pricing(bytes32(0x0))));
         alice = address(0xdeada1ce);
+        bob = address(0x0deadb0b);
         vm.deal(alice, 3 ether);
         rg = IERC20ReaperGambit(0x2C91D908E9fab2dD2441532a04182d791e590f2d);
         BMPImage renderer = new BMPImage();
@@ -47,7 +51,7 @@ contract ReaperGambitTest is Test {
         proxy = new ERC1967Proxy(
             address(_implementation), abi.encodeCall(ReaperGambitEpitaph.initialize, (renderer, pricer))
         );
-        rge = ReaperGambitEpitaph(address(proxy));
+        rge = ReaperGambitEpitaph(RGE_ADDRESS);
     }
 
     function testMintingInteg() public {
@@ -71,8 +75,10 @@ contract ReaperGambitTest is Test {
             uint256(0x000117230000fffc0ceef8018c1800000001c61e00030007c3380e0000400000),
             uint256(0x00007d7000027ffc3fe00200701e000000000cc00001c007fe0004001fe00000)
         ];
-        rge.mintEpitaphOf{value: amount}(sig, 0xFFFFF9, alice, new bytes(0));
-        assertTrue(true);
+        bytes memory options = new bytes(1);
+        options[0] = 0x00;
+        rge.mintEpitaphOf{value: amount}(sig, 0xFFFFF9, bob, options);
+        assertTrue(rge.balanceOf(bob) > 0);
     }
 
     function testUpgradesAuthorization() public {
