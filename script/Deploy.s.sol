@@ -137,3 +137,18 @@ contract DeployPricer is Script {
         vm.stopBroadcast();
     }
 }
+
+contract DeployPricerV0 is Script {
+    using console2 for string;
+    using console2 for bytes;
+
+    function run() public {
+        vm.startBroadcast();
+        IPricing pricerV0 = IPricing(
+            address(
+                new ERC1967Proxy(address(0x020258166495753088fC250ee26985135c23a40E), abi.encodeCall(PricingV0.initialize, (address(RGE_ADDRESS))))
+            )
+        );
+        vm.stopBroadcast();
+    }
+}
